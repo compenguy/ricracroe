@@ -36,6 +36,14 @@ impl std::fmt::Display for RRRBoard {
         for y in 0..ysize {
             try!(write!(f, "  "));
             if y == 0 {
+                // Display the x coordinates at the top
+                for x in 0..xsize {
+                    if x == 0 { try!(write!(f, " ")); }
+                    else      { try!(write!(f, " ")); }
+                    try!(write!(f, "{}", x+1));
+                }
+                try!(write!(f, "\n"));
+                try!(write!(f, "  "));
                 // Display the top border
                 for x in 0..xsize {
                     if x == 0 { try!(write!(f, "╭")); }
@@ -55,7 +63,7 @@ impl std::fmt::Display for RRRBoard {
             try!(write!(f, "\n"));
 
             // Display one row of board cells
-            try!(write!(f, "{} ", y));
+            try!(write!(f, "{} ", y+1));
             for x in 0..xsize {
                 try!(write!(f, "│"));
                 // TODO: Come back and add error handling
@@ -73,14 +81,6 @@ impl std::fmt::Display for RRRBoard {
             try!(write!(f, "─"));
         }
         try!(write!(f, "╯"));
-        try!(write!(f, "\n"));
-
-        try!(write!(f, "  "));
-        for x in 0..xsize {
-            if x == 0 { try!(write!(f, " ")); }
-            else      { try!(write!(f, " ")); }
-            try!(write!(f, "{}", x));
-        }
         write!(f, "\n")
     }
 }
