@@ -1,7 +1,7 @@
 mod ricracroe;
 
 fn main() {
-    let mut board = ricracroe::RRRBoard::new_anysize(8,6);
+    let mut board = ricracroe::RRRBoard::new_anysize(8);
     // TODO: Right now, just being lazy and allowing errors to panic
     println!("Starting board:\n{}", board);
     board.make_move(0, 0, ricracroe::RRRCell::X).unwrap();
