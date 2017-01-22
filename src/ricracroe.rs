@@ -1,6 +1,8 @@
 extern crate std;
 
-use std::iter::FromIterator;
+use std::collections::HashMap;
+use std::collections::HashSet;
+use std::vec::Vec;
 
 // Allow default debug output display
 #[derive(Debug)]
@@ -16,18 +18,6 @@ pub enum RRRCell {
     O,
 }
 
-// Allow default debug output display
-#[derive(Debug)]
-// Allow us to do equality tests on enum members
-#[derive(PartialEq, Eq)]
-// Give it copy semantics
-#[derive(Clone)]
-pub enum RRROutcome {
-    Draw,
-    XWins { winning_cells: std::vec::Vec<(usize, usize)> },
-    OWins { winning_cells: std::vec::Vec<(usize, usize)> },
-}
-
 impl std::fmt::Display for RRRCell {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match *self {
@@ -38,9 +28,31 @@ impl std::fmt::Display for RRRCell {
     }
 }
 
+// Allow default debug output display
+#[derive(Debug)]
+// Allow us to do equality tests on enum members
+#[derive(PartialEq, Eq)]
+// Give it copy semantics
+#[derive(Clone)]
+pub enum RRROutcome {
+    Draw,
+    XWins { winning_cells: Vec<(usize, usize)> },
+    OWins { winning_cells: Vec<(usize, usize)> },
+}
+
+impl std::fmt::Display for RRROutcome {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match *self {
+            RRROutcome::Draw => write!(f, "It's a draw!"),
+            RRROutcome::XWins{ winning_cells: _ } => write!(f, "X Wins!"),
+            RRROutcome::OWins{ winning_cells: _ } => write!(f, "O Wins!"),
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct RRRBoard {
-    cells: std::collections::HashMap<(usize, usize),RRRCell>,
+    cells: HashMap<(usize, usize),RRRCell>,
     size: usize,
 }
 
@@ -133,16 +145,16 @@ impl RRRBoard {
     }
 
     // maybe_winning_cells is the sub-hashmap of the cells we should be considering
-    fn test_winner(&self, maybe_winning_cells: std::collections::HashMap<(usize, usize),RRRCell>) -> Option<RRROutcome> {
+    fn test_winner(&self, maybe_winning_cells: &HashMap<&(usize, usize),&RRRCell>) -> Option<RRROutcome> {
         assert!(maybe_winning_cells.len() == self.get_size());
-        let vals = std::collections::HashSet::from_iter(maybe_winning_cells.values());
+        let vals: HashSet<&RRRCell> = maybe_winning_cells.values().cloned().collect();
 
         // If the set of all values being considered is exactly one, and it's not Clear
         // then we have a winner
         if vals.len() == 1 && !vals.contains(&RRRCell::Clear) {
             match vals.iter().next() {
-                Some(&&RRRCell::X)     => Some(RRROutcome::XWins { winning_cells: std::vec::Vec::from_iter(maybe_winning_cells.keys()) }),
-                Some(&&RRRCell::O)     => Some(RRROutcome::OWins { winning_cells: std::vec::Vec::from_iter(maybe_winning_cells.keys()) }),
+                Some(&&RRRCell::X)     => Some(RRROutcome::XWins { winning_cells: maybe_winning_cells.keys().cloned().cloned().collect() }),
+                Some(&&RRRCell::O)     => Some(RRROutcome::OWins { winning_cells: maybe_winning_cells.keys().cloned().cloned().collect() }),
                 Some(&&RRRCell::Clear) => None,
                 None                   => None,
             }
@@ -154,32 +166,33 @@ impl RRRBoard {
     #[allow(dead_code)]
     pub fn outcome(&self) -> Option<RRROutcome> {
         // look for winners
-        let maybe_winning_cells = std::collections::HashMap::new();
+        let mut maybe_winning_cells;
 
+        // TODO: Recognize when there's more than winning path
         // start with the rows and columns
         for boardslice in 0..self.get_size() {
-            maybe_winning_cells.extend(self.cells.iter().filter(|&(&(x, y), &v)| x == boardslice));
-            if let Some(winning_column) = self.test_winner(maybe_winning_cells) {
+            maybe_winning_cells = self.cells.iter().filter(|&(&(x, _), &_)| x == boardslice).collect();
+            if let Some(winning_column) = self.test_winner(&maybe_winning_cells) {
                 return Some(winning_column);
             }
             maybe_winning_cells.clear();
 
-            maybe_winning_cells.extend(self.cells.iter().filter(|&(&(x, y), &v)| y == boardslice));
-            if let Some(winning_row) = self.test_winner(maybe_winning_cells) {
+            maybe_winning_cells = self.cells.iter().filter(|&(&(_, y), &_)| y == boardslice).collect();
+            if let Some(winning_row) = self.test_winner(&maybe_winning_cells) {
                 return Some(winning_row);
             }
             maybe_winning_cells.clear()
         }
         // positive slope diagonal
-        maybe_winning_cells.extend(self.cells.iter().filter(|&(&(x, y), &v)| x == y));
-        if let Some(winning_positive_diagonal) = self.test_winner(maybe_winning_cells) {
+        maybe_winning_cells = self.cells.iter().filter(|&(&(x, y), &_)| x == y).collect();
+        if let Some(winning_positive_diagonal) = self.test_winner(&maybe_winning_cells) {
             return Some(winning_positive_diagonal);
         }
         maybe_winning_cells.clear();
 
         // negative slope diagonal
-        maybe_winning_cells.extend(self.cells.iter().filter(|&(&(x, y), &v)| x ==  self.get_size() - y));
-        if let Some(winning_negative_diagonal) = self.test_winner(maybe_winning_cells) {
+        maybe_winning_cells = self.cells.iter().filter(|&(&(x, y), &_)| x ==  self.get_size() - y - 1).collect();
+        if let Some(winning_negative_diagonal) = self.test_winner(&maybe_winning_cells) {
             return Some(winning_negative_diagonal);
         }
         maybe_winning_cells.clear();
@@ -208,7 +221,7 @@ impl RRRBoard {
 
     pub fn new_anysize(size: usize) -> Self {
         let mut _self = RRRBoard {
-            cells: std::collections::HashMap::new(),
+            cells: HashMap::new(),
             size: size,
         };
         _self.init();
@@ -240,8 +253,8 @@ fn main() {
     }
     println!("After next move:\n{}", board);
     match board.outcome() {
-        Some(RRROutcome::XWins { winning_cells }) => println!("X Wins!"),
-        Some(RRROutcome::OWins { winning_cells }) => println!("O Wins!"),
+        Some(RRROutcome::XWins { winning_cells: _ }) => println!("X Wins!"),
+        Some(RRROutcome::OWins { winning_cells: _ }) => println!("O Wins!"),
         Some(RRROutcome::Draw) => println!("It's a draw!"),
         None => {},
     }
