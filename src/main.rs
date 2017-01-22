@@ -1,5 +1,7 @@
 mod ricracroe;
 
+use std::io::{self, Write};
+
 fn next_player(player: &mut ricracroe::RRRCell) -> Result<ricracroe::RRRCell, &'static str> {
     match *player {
         ricracroe::RRRCell::X     => {
@@ -17,9 +19,9 @@ fn next_player(player: &mut ricracroe::RRRCell) -> Result<ricracroe::RRRCell, &'
 fn take_turn(board: &mut ricracroe::RRRBoard, x: usize, y: usize, player: &mut ricracroe::RRRCell) -> Option<ricracroe::RRROutcome> {
     // TODO: Right now, just being lazy and allowing errors to panic
     match board.make_move(x, y, *player) {
-        Ok(_) => println!("{} played in {}, {}:\n{}", player, x, y, board),
+        Ok(_) => println!("{} played in {}, {}:\n{}", player, x+1, y+1, board),
         Err(e) => {
-            println!("{} attempted to play in {}, {}:\n{}", player, x, y, board);
+            println!("{} attempted to play in {}, {}:\n{}", player, x+1, y+1, board);
             println!("Something went wrong: {}", e);
             return None;
         }
@@ -35,38 +37,30 @@ fn take_turn(board: &mut ricracroe::RRRBoard, x: usize, y: usize, player: &mut r
     outcome
 }
 
+/* TODO: templatize? */
+fn get_usize_with_prompt(prompt: &str) -> Result<usize, &'static str> {
+    let mut buffer = String::new();
+    print!("{}", prompt);
+    io::stdout().flush().unwrap();
+    io::stdin().read_line(&mut buffer).unwrap();
+    /* parse<usize> yields std::num::ParseIntError s */
+    match buffer.trim().parse::<usize>() {
+        Ok(ret) => Ok(ret),
+        Err(_) => Err("I'm sorry, I didn't catch that."),
+    }
+}
+
 fn main() {
-    let mut board = ricracroe::RRRBoard::new_anysize(6);
+    let mut board = ricracroe::RRRBoard::new_anysize(3);
     let mut current_player = ricracroe::RRRCell::X;
+    let mut outcome = None;
 
-    println!("Starting board:\n{}", board);
-    match take_turn(&mut board, 0, 0, &mut current_player) {
-        Some(_) => return,
-        None => {},
-    }
-
-    match take_turn(&mut board, 0, 1, &mut current_player) {
-        Some(_) => return,
-        None => {},
-    }
-
-    match take_turn(&mut board, 2, 2, &mut current_player) {
-        Some(_) => return,
-        None => {},
-    }
-
-    match take_turn(&mut board, 2, 2, &mut current_player) {
-        Some(_) => return,
-        None => {},
-    }
-
-    match take_turn(&mut board, 2, 1, &mut current_player) {
-        Some(_) => return,
-        None => {},
-    }
-
-    match take_turn(&mut board, 1, 1, &mut current_player) {
-        Some(_) => return,
-        None => {},
+    println!("Welcome to Ric Rac Roe!\n{}", board);
+    while outcome == None {
+        println!("It's {}'s turn.", current_player);
+        /* we print the board with rows and columns 1-indexed */
+        let row = get_usize_with_prompt("Row:    ").unwrap() - 1;
+        let col = get_usize_with_prompt("Column: ").unwrap() - 1;
+        outcome = take_turn(&mut board, col, row, &mut current_player);
     }
 }
