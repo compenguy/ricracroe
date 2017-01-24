@@ -274,7 +274,7 @@ impl RRRBoard {
 
         // no winners, look for draw
         // If no cell is RRRCell::Clear, it's not a draw yet
-        if self.cells.values().find(|&&x| x == RRRCell::Clear) != Some(&RRRCell::Clear) {
+        if ! self.cells.values().any(|&x| x == RRRCell::Clear) {
             Some(RRROutcome::Draw)
         } else {
             None
