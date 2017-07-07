@@ -64,10 +64,24 @@ fn main() {
     let mut game = ricracroe::RRRGame::new_anysize(3);
 
     println!("Welcome to Ric Rac Roe!\n{}", game.get_board());
-    while !game.over() {
-        println!("It's {}'s turn.", game.get_turn());
+    loop {
+        let player = game.get_turn();
+        println!("It's {}'s turn.", player);
         let row = get_usize_with_prompt("Row:    ").unwrap();
         let col = get_usize_with_prompt("Column: ").unwrap();
-        game.take_turn(col, row);
+        match game.take_turn(col, row) {
+            Ok(_) => {
+                println!("{} played in {}, {}:\n{}", player, col, row, game.board);
+            }
+            Err(e) => {
+                println!("{} attempted to play in {}, {}:\n{}", player, col, row, game.board);
+                println!("Something went wrong: {}", e);
+            }
+
+        }
+        if let Some(winner) = game.outcome {
+            println!("{}", winner);
+            break;
+        }
     }
 }

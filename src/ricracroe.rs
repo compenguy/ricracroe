@@ -312,9 +312,9 @@ impl RRRBoard {
 }
 
 pub struct RRRGame {
-    board: RRRBoard,
-    player: RRRCell,
-    outcome: Option<RRROutcome>,
+    pub board: RRRBoard,
+    pub player: RRRCell,
+    pub outcome: Option<RRROutcome>,
 }
 
 impl RRRGame {
@@ -340,32 +340,26 @@ impl RRRGame {
         }
     }
 
-    pub fn take_turn(&mut self, x: usize, y: usize) {
-        // TODO: Right now, just being lazy and allowing errors to panic
+    pub fn take_turn(&mut self, x: usize, y: usize) -> Result<RRRCell, RRRError> {
         match self.board.make_move(x, y, self.player) {
-            Ok(_) => println!("{} played in {}, {}:\n{}", self.player, x+1, y+1, self.board),
+            Ok(_) => {
+                self.outcome = self.board.outcome();
+                if ! self.over() {
+                    self.next_player().unwrap();
+                }
+                Ok(self.player)
+            }
             Err(e) => {
                 println!("{} attempted to play in {}, {}:\n{}", self.player, x+1, y+1, self.board);
                 println!("Something went wrong: {}", e);
-                return;
+                Err(e)
             }
         }
 
-        self.outcome = self.board.outcome();
-        if let Some(ref outcome) = self.outcome {
-            println!("{}", outcome);
-        } else {
-            self.next_player().unwrap();
-        }
     }
 
     pub fn over(&self) -> bool {
-        match self.outcome {
-            Some(RRROutcome::XWins{ winning_cells: _ }) => true,
-            Some(RRROutcome::OWins{ winning_cells: _ }) => true,
-            Some(RRROutcome::Draw)                      => true,
-            None                                        => false,
-        }
+        self.outcome.is_some()
     }
 
     pub fn new_anysize(size: usize) -> Self {
