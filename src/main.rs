@@ -6,6 +6,8 @@ use std::error;
 
 use std::num;
 
+extern crate term_cursor;
+
 #[derive(Debug)]
 enum RicracroeError {
     Io(io::Error),
@@ -63,22 +65,28 @@ fn get_usize_with_prompt(prompt: &str) -> Result<usize, RicracroeError> {
 fn main() {
     let mut game = ricracroe::RRRGame::new_anysize(3);
 
-    println!("Welcome to Ric Rac Roe!\n{}", game.get_board());
     loop {
         let player = game.get_turn();
-        println!("It's {}'s turn.", player);
-        let row = get_usize_with_prompt("Row:    ").unwrap();
-        let col = get_usize_with_prompt("Column: ").unwrap();
-        match game.take_turn(col, row) {
-            Ok(_) => {
-                println!("{} played in {}, {}:\n{}", player, col, row, game.board);
-            }
-            Err(e) => {
-                println!("{} attempted to play in {}, {}:\n{}", player, col, row, game.board);
-                println!("Something went wrong: {}", e);
-            }
+        print!("{}", term_cursor::Clear);
+        println!("Welcome to Ric Rac Roe!");
 
+        print!("{}", term_cursor::Goto(0,4));
+        println!("{}", game.get_board());
+
+        print!("{}", term_cursor::Goto(0,15));
+        println!("It's {}'s turn.", player);
+
+        print!("{}", term_cursor::Goto(0,16));
+        let row = get_usize_with_prompt("Row:    ").unwrap();
+
+        print!("{}", term_cursor::Goto(0,17));
+        let col = get_usize_with_prompt("Column: ").unwrap();
+
+        if let Err(e) = game.take_turn(col, row) {
+            println!("{} attempted to play in {}, {}", player, col, row);
+            println!("Something went wrong: {}", e);
         }
+
         if let Some(winner) = game.outcome {
             println!("{}", winner);
             break;
