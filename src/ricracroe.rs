@@ -494,10 +494,13 @@ fn handle_mouseclick_board(
             None => return UpdateScreen::DontRedraw,
         };
 
+    /* Explicitly ignore error - this prevents updating the state when the requested
+     * state is invalid (illegal move)
+     */
     app_state.data.modify(|board| {
         board
             .take_turn(clicked_col_idx, clicked_row_idx)
-            .expect("Game logic error.");
+            .unwrap_or(RRRCell::Clear);
         ()
     });
 
