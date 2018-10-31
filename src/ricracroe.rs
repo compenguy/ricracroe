@@ -420,6 +420,8 @@ impl RRRGame {
 
 impl Layout for RRRGame {
     fn layout(&self, _info: WindowInfo<Self>) -> Dom<Self> {
+        let outcome = self.outcome.clone();
+        let turn = self.get_turn();
         Dom::new(NodeType::Div)
             .with_child(
                 Dom::new(NodeType::Div)
@@ -431,23 +433,23 @@ impl Layout for RRRGame {
                             self.get_board()
                                 .fetch(0, 0)
                                 .expect("Error updating board state")
-                        ))).with_class("board-cell")
+                        ))).with_class("cell")
                         .with_hit_test(On::MouseUp),
                     ).with_child(
                         Dom::new(NodeType::Label(format!(
                             "{}",
                             self.get_board()
-                                .fetch(0, 1)
+                                .fetch(1, 0)
                                 .expect("Error updating board state")
-                        ))).with_class("board-cell")
+                        ))).with_class("cell")
                         .with_hit_test(On::MouseUp),
                     ).with_child(
                         Dom::new(NodeType::Label(format!(
                             "{}",
                             self.get_board()
-                                .fetch(0, 2)
+                                .fetch(2, 0)
                                 .expect("Error updating board state")
-                        ))).with_class("board-cell")
+                        ))).with_class("cell")
                         .with_hit_test(On::MouseUp),
                     ),
             ).with_child(
@@ -458,9 +460,9 @@ impl Layout for RRRGame {
                         Dom::new(NodeType::Label(format!(
                             "{}",
                             self.get_board()
-                                .fetch(1, 0)
+                                .fetch(0, 1)
                                 .expect("Error updating board state")
-                        ))).with_class("board-cell")
+                        ))).with_class("cell")
                         .with_hit_test(On::MouseUp),
                     ).with_child(
                         Dom::new(NodeType::Label(format!(
@@ -468,15 +470,15 @@ impl Layout for RRRGame {
                             self.get_board()
                                 .fetch(1, 1)
                                 .expect("Error updating board state")
-                        ))).with_class("board-cell")
+                        ))).with_class("cell")
                         .with_hit_test(On::MouseUp),
                     ).with_child(
                         Dom::new(NodeType::Label(format!(
                             "{}",
                             self.get_board()
-                                .fetch(1, 2)
+                                .fetch(2, 1)
                                 .expect("Error updating board state")
-                        ))).with_class("board-cell")
+                        ))).with_class("cell")
                         .with_hit_test(On::MouseUp),
                     ),
             ).with_child(
@@ -487,17 +489,17 @@ impl Layout for RRRGame {
                         Dom::new(NodeType::Label(format!(
                             "{}",
                             self.get_board()
-                                .fetch(2, 0)
+                                .fetch(0, 2)
                                 .expect("Error updating board state")
-                        ))).with_class("board-cell")
+                        ))).with_class("cell")
                         .with_hit_test(On::MouseUp),
                     ).with_child(
                         Dom::new(NodeType::Label(format!(
                             "{}",
                             self.get_board()
-                                .fetch(2, 1)
+                                .fetch(1, 2)
                                 .expect("Error updating board state")
-                        ))).with_class("board-cell")
+                        ))).with_class("cell")
                         .with_hit_test(On::MouseUp),
                     ).with_child(
                         Dom::new(NodeType::Label(format!(
@@ -505,10 +507,19 @@ impl Layout for RRRGame {
                             self.get_board()
                                 .fetch(2, 2)
                                 .expect("Error updating board state")
-                        ))).with_class("board-cell")
+                        ))).with_class("cell")
                         .with_hit_test(On::MouseUp),
                     ),
             ).with_callback(On::MouseUp, Callback(handle_mouseclick_board))
+            .with_child(
+                Dom::new(NodeType::Div)
+                    .with_class("game-state")
+                    .with_child(
+                        Dom::new(NodeType::Label(
+                            format!("{}", outcome.map(|o| format!("{}", o)).unwrap_or_else(|| format!("{}'s turn.", turn)))
+                        ))
+                    )
+            )
     }
 }
 
@@ -516,6 +527,13 @@ fn handle_mouseclick_board(
     app_state: &mut AppState<RRRGame>,
     event: WindowEvent<RRRGame>,
 ) -> UpdateScreen {
+    {
+        let game = app_state.data.lock().unwrap();
+        if (*game).over() {
+            return UpdateScreen::DontRedraw;
+        }
+    }
+
     // Figure out which row was clicked
     let (clicked_row_idx, row_that_was_clicked) =
         match event.get_first_hit_child(event.hit_dom_node, On::MouseUp) {
@@ -530,9 +548,10 @@ fn handle_mouseclick_board(
         };
 
     app_state.data.modify(|board| {
-        board.take_turn(clicked_row_idx, clicked_col_idx);
-        {}
+        board.take_turn(clicked_col_idx, clicked_row_idx);
+        ()
     });
+
     UpdateScreen::Redraw
 }
 

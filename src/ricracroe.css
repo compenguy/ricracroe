@@ -1,7 +1,18 @@
 .row {
     flex-direction: row;
     border-bottom: 1px solid #8d8d8d;
-    height: 78px;
+}
+
+.cell {
+    border-right: 1px solid #8d8d8d;
+    border-bottom: 1px solid #8d8d8d;
+    font-color: white;
+    background-color: #333;
+}
+
+.game-state {
+    height: 2em;
+    background-color: grey;
 }
 
 * {
