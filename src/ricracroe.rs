@@ -1,10 +1,12 @@
 extern crate std;
 
-use std::fmt;
-use std::error;
 use std::collections::HashMap;
 use std::collections::HashSet;
+use std::error;
+use std::fmt;
 use std::vec::Vec;
+
+use azul::prelude::*;
 
 #[derive(Debug)]
 pub enum RRRError {
@@ -16,9 +18,13 @@ pub enum RRRError {
 impl fmt::Display for RRRError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            RRRError::InvalidCellPosition(x, y) => write!(f, "{}, {} is an invalid cell position.", x, y),
-            RRRError::CellAlreadySet(x, y, plyr)=> write!(f, "{}, {} has already been played in by {}.", x, y, plyr),
-            RRRError::NoActivePlayer            => write!(f, "The current game has no active player."),
+            RRRError::InvalidCellPosition(x, y) => {
+                write!(f, "{}, {} is an invalid cell position.", x, y)
+            }
+            RRRError::CellAlreadySet(x, y, plyr) => {
+                write!(f, "{}, {} has already been played in by {}.", x, y, plyr)
+            }
+            RRRError::NoActivePlayer => write!(f, "The current game has no active player."),
         }
     }
 }
@@ -27,16 +33,16 @@ impl error::Error for RRRError {
     fn description(&self) -> &str {
         match *self {
             RRRError::InvalidCellPosition(_, _) => "invalid cell position",
-            RRRError::CellAlreadySet(_, _, _)   => "cell already played in",
-            RRRError::NoActivePlayer            => "no active player",
+            RRRError::CellAlreadySet(_, _, _) => "cell already played in",
+            RRRError::NoActivePlayer => "no active player",
         }
     }
 
     fn cause(&self) -> Option<&error::Error> {
         match *self {
             RRRError::InvalidCellPosition(_, _) => None,
-            RRRError::CellAlreadySet(_, _, _)   => None,
-            RRRError::NoActivePlayer            => None,
+            RRRError::CellAlreadySet(_, _, _) => None,
+            RRRError::NoActivePlayer => None,
         }
     }
 }
@@ -59,8 +65,8 @@ impl fmt::Display for RRRCell {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             RRRCell::Clear => write!(f, "·"),
-            RRRCell::X     => write!(f, "X"),
-            RRRCell::O     => write!(f, "O"),
+            RRRCell::X => write!(f, "X"),
+            RRRCell::O => write!(f, "O"),
         }
     }
 }
@@ -81,15 +87,15 @@ impl fmt::Display for RRROutcome {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             RRROutcome::Draw => write!(f, "It's a draw!"),
-            RRROutcome::XWins{ winning_cells: _ } => write!(f, "X Wins!"),
-            RRROutcome::OWins{ winning_cells: _ } => write!(f, "O Wins!"),
+            RRROutcome::XWins { winning_cells: _ } => write!(f, "X Wins!"),
+            RRROutcome::OWins { winning_cells: _ } => write!(f, "O Wins!"),
         }
     }
 }
 
 #[derive(Debug)]
 pub struct RRRBoard {
-    cells: HashMap<(usize, usize),RRRCell>,
+    cells: HashMap<(usize, usize), RRRCell>,
     size: usize,
 }
 
@@ -140,8 +146,11 @@ impl RRRBoard {
         // cell
         let mut line = String::with_capacity(2 + (self.get_size() * 2) - 1);
         for x in 0..self.get_size() {
-            if x == 0 { line.push('╭'); }
-            else      { line.push('┬'); }
+            if x == 0 {
+                line.push('╭');
+            } else {
+                line.push('┬');
+            }
             line.push('─');
         }
         line.push('╮');
@@ -153,8 +162,11 @@ impl RRRBoard {
         // cell
         let mut line = String::with_capacity(2 + (self.get_size() * 2) - 1);
         for x in 0..self.get_size() {
-            if x == 0 { line.push('╰'); }
-            else      { line.push('┴'); }
+            if x == 0 {
+                line.push('╰');
+            } else {
+                line.push('┴');
+            }
             line.push('─');
         }
         line.push('╯');
@@ -168,10 +180,10 @@ impl RRRBoard {
         for x in 0..self.get_size() {
             line.push('│');
             match self.fetch(x, y) {
-                Ok(RRRCell::X)     => line.push('X'),
-                Ok(RRRCell::O)     => line.push('O'),
+                Ok(RRRCell::X) => line.push('X'),
+                Ok(RRRCell::O) => line.push('O'),
                 Ok(RRRCell::Clear) => line.push(' '),
-                Err(_)             => line.push('!'),
+                Err(_) => line.push('!'),
             }
         }
         line.push('│');
@@ -181,8 +193,11 @@ impl RRRBoard {
     pub fn render_board_row_sep(&self) -> String {
         let mut line = String::with_capacity(2 + (self.get_size() * 2) - 1);
         for x in 0..self.get_size() {
-            if x == 0 { line.push('├'); }
-            else      { line.push('┼'); }
+            if x == 0 {
+                line.push('├');
+            } else {
+                line.push('┼');
+            }
             line.push('─');
         }
         line.push('┤');
@@ -196,7 +211,7 @@ impl RRRBoard {
     pub fn fetch(&self, x: usize, y: usize) -> Result<RRRCell, RRRError> {
         match self.cells.get(&(x, y)) {
             Some(cell) => Ok(*cell),
-            None => Err(RRRError::InvalidCellPosition(x,y)),
+            None => Err(RRRError::InvalidCellPosition(x, y)),
         }
     }
 
@@ -209,7 +224,12 @@ impl RRRBoard {
         }
     }
 
-    pub fn make_move(&mut self, x: usize, y: usize, new_state: RRRCell) -> Result<RRRCell, RRRError> {
+    pub fn make_move(
+        &mut self,
+        x: usize,
+        y: usize,
+        new_state: RRRCell,
+    ) -> Result<RRRCell, RRRError> {
         // Block moves to cells that have already been used
         let cur_val = try!(self.fetch(x, y));
         if cur_val == RRRCell::X || cur_val == RRRCell::O {
@@ -220,7 +240,10 @@ impl RRRBoard {
     }
 
     // maybe_winning_cells is the sub-hashmap of the cells we should be considering
-    fn test_winner(&self, maybe_winning_cells: &HashMap<&(usize, usize),&RRRCell>) -> Option<RRROutcome> {
+    fn test_winner(
+        &self,
+        maybe_winning_cells: &HashMap<&(usize, usize), &RRRCell>,
+    ) -> Option<RRROutcome> {
         assert!(maybe_winning_cells.len() == self.get_size());
         let vals: HashSet<&RRRCell> = maybe_winning_cells.values().cloned().collect();
 
@@ -228,10 +251,14 @@ impl RRRBoard {
         // then we have a winner
         if vals.len() == 1 && !vals.contains(&RRRCell::Clear) {
             match vals.iter().next() {
-                Some(&&RRRCell::X)     => Some(RRROutcome::XWins { winning_cells: maybe_winning_cells.keys().cloned().cloned().collect() }),
-                Some(&&RRRCell::O)     => Some(RRROutcome::OWins { winning_cells: maybe_winning_cells.keys().cloned().cloned().collect() }),
+                Some(&&RRRCell::X) => Some(RRROutcome::XWins {
+                    winning_cells: maybe_winning_cells.keys().cloned().cloned().collect(),
+                }),
+                Some(&&RRRCell::O) => Some(RRROutcome::OWins {
+                    winning_cells: maybe_winning_cells.keys().cloned().cloned().collect(),
+                }),
                 Some(&&RRRCell::Clear) => None,
-                None                   => None,
+                None => None,
             }
         } else {
             None
@@ -246,13 +273,21 @@ impl RRRBoard {
         // TODO: Recognize when there's more than winning path
         // start with the rows and columns
         for boardslice in 0..self.get_size() {
-            maybe_winning_cells = self.cells.iter().filter(|&(&(x, _), &_)| x == boardslice).collect();
+            maybe_winning_cells = self
+                .cells
+                .iter()
+                .filter(|&(&(x, _), &_)| x == boardslice)
+                .collect();
             if let Some(winning_column) = self.test_winner(&maybe_winning_cells) {
                 return Some(winning_column);
             }
             maybe_winning_cells.clear();
 
-            maybe_winning_cells = self.cells.iter().filter(|&(&(_, y), &_)| y == boardslice).collect();
+            maybe_winning_cells = self
+                .cells
+                .iter()
+                .filter(|&(&(_, y), &_)| y == boardslice)
+                .collect();
             if let Some(winning_row) = self.test_winner(&maybe_winning_cells) {
                 return Some(winning_row);
             }
@@ -266,7 +301,11 @@ impl RRRBoard {
         maybe_winning_cells.clear();
 
         // negative slope diagonal
-        maybe_winning_cells = self.cells.iter().filter(|&(&(x, y), &_)| x ==  self.get_size() - y - 1).collect();
+        maybe_winning_cells = self
+            .cells
+            .iter()
+            .filter(|&(&(x, y), &_)| x == self.get_size() - y - 1)
+            .collect();
         if let Some(winning_negative_diagonal) = self.test_winner(&maybe_winning_cells) {
             return Some(winning_negative_diagonal);
         }
@@ -274,7 +313,7 @@ impl RRRBoard {
 
         // no winners, look for draw
         // If no cell is RRRCell::Clear, it's not a draw yet
-        if ! self.cells.values().any(|&x| x == RRRCell::Clear) {
+        if !self.cells.values().any(|&x| x == RRRCell::Clear) {
             Some(RRROutcome::Draw)
         } else {
             None
@@ -284,7 +323,7 @@ impl RRRBoard {
     pub fn init(&mut self) {
         // reset the board
         self.cells.clear();
-        self.cells.reserve((self.size*self.size) as usize);
+        self.cells.reserve((self.size * self.size) as usize);
 
         for x in 0..self.size {
             for y in 0..self.size {
@@ -301,14 +340,12 @@ impl RRRBoard {
         };
         _self.init();
         _self
-
     }
 
     #[allow(dead_code)]
     pub fn new() -> Self {
         RRRBoard::new_anysize(3)
     }
-
 }
 
 pub struct RRRGame {
@@ -328,11 +365,11 @@ impl RRRGame {
 
     pub fn next_player(&mut self) -> Result<RRRCell, RRRError> {
         match self.player {
-            RRRCell::X     => {
+            RRRCell::X => {
                 self.player = RRRCell::O;
                 Ok(self.player)
             }
-            RRRCell::O     => {
+            RRRCell::O => {
                 self.player = RRRCell::X;
                 Ok(self.player)
             }
@@ -344,18 +381,23 @@ impl RRRGame {
         match self.board.make_move(x, y, self.player) {
             Ok(_) => {
                 self.outcome = self.board.outcome();
-                if ! self.over() {
+                if !self.over() {
                     self.next_player().unwrap();
                 }
                 Ok(self.player)
             }
             Err(e) => {
-                println!("{} attempted to play in {}, {}:\n{}", self.player, x+1, y+1, self.board);
+                println!(
+                    "{} attempted to play in {}, {}:\n{}",
+                    self.player,
+                    x + 1,
+                    y + 1,
+                    self.board
+                );
                 println!("Something went wrong: {}", e);
                 Err(e)
             }
         }
-
     }
 
     pub fn over(&self) -> bool {
@@ -374,8 +416,124 @@ impl RRRGame {
     pub fn new() -> Self {
         RRRGame::new_anysize(3)
     }
+}
 
+impl Layout for RRRGame {
+    fn layout(&self, _info: WindowInfo<Self>) -> Dom<Self> {
+        Dom::new(NodeType::Div)
+            .with_child(
+                Dom::new(NodeType::Div)
+                    .with_class("row")
+                    .with_hit_test(On::MouseUp)
+                    .with_child(
+                        Dom::new(NodeType::Label(format!(
+                            "{}",
+                            self.get_board()
+                                .fetch(0, 0)
+                                .expect("Error updating board state")
+                        ))).with_class("board-cell")
+                        .with_hit_test(On::MouseUp),
+                    ).with_child(
+                        Dom::new(NodeType::Label(format!(
+                            "{}",
+                            self.get_board()
+                                .fetch(0, 1)
+                                .expect("Error updating board state")
+                        ))).with_class("board-cell")
+                        .with_hit_test(On::MouseUp),
+                    ).with_child(
+                        Dom::new(NodeType::Label(format!(
+                            "{}",
+                            self.get_board()
+                                .fetch(0, 2)
+                                .expect("Error updating board state")
+                        ))).with_class("board-cell")
+                        .with_hit_test(On::MouseUp),
+                    ),
+            ).with_child(
+                Dom::new(NodeType::Div)
+                    .with_class("row")
+                    .with_hit_test(On::MouseUp)
+                    .with_child(
+                        Dom::new(NodeType::Label(format!(
+                            "{}",
+                            self.get_board()
+                                .fetch(1, 0)
+                                .expect("Error updating board state")
+                        ))).with_class("board-cell")
+                        .with_hit_test(On::MouseUp),
+                    ).with_child(
+                        Dom::new(NodeType::Label(format!(
+                            "{}",
+                            self.get_board()
+                                .fetch(1, 1)
+                                .expect("Error updating board state")
+                        ))).with_class("board-cell")
+                        .with_hit_test(On::MouseUp),
+                    ).with_child(
+                        Dom::new(NodeType::Label(format!(
+                            "{}",
+                            self.get_board()
+                                .fetch(1, 2)
+                                .expect("Error updating board state")
+                        ))).with_class("board-cell")
+                        .with_hit_test(On::MouseUp),
+                    ),
+            ).with_child(
+                Dom::new(NodeType::Div)
+                    .with_class("row")
+                    .with_hit_test(On::MouseUp)
+                    .with_child(
+                        Dom::new(NodeType::Label(format!(
+                            "{}",
+                            self.get_board()
+                                .fetch(2, 0)
+                                .expect("Error updating board state")
+                        ))).with_class("board-cell")
+                        .with_hit_test(On::MouseUp),
+                    ).with_child(
+                        Dom::new(NodeType::Label(format!(
+                            "{}",
+                            self.get_board()
+                                .fetch(2, 1)
+                                .expect("Error updating board state")
+                        ))).with_class("board-cell")
+                        .with_hit_test(On::MouseUp),
+                    ).with_child(
+                        Dom::new(NodeType::Label(format!(
+                            "{}",
+                            self.get_board()
+                                .fetch(2, 2)
+                                .expect("Error updating board state")
+                        ))).with_class("board-cell")
+                        .with_hit_test(On::MouseUp),
+                    ),
+            ).with_callback(On::MouseUp, Callback(handle_mouseclick_board))
+    }
+}
 
+fn handle_mouseclick_board(
+    app_state: &mut AppState<RRRGame>,
+    event: WindowEvent<RRRGame>,
+) -> UpdateScreen {
+    // Figure out which row was clicked
+    let (clicked_row_idx, row_that_was_clicked) =
+        match event.get_first_hit_child(event.hit_dom_node, On::MouseUp) {
+            Some(s) => s,
+            None => return UpdateScreen::DontRedraw,
+        };
+
+    let (clicked_col_idx, col_that_was_clicked) =
+        match event.get_first_hit_child(row_that_was_clicked, On::MouseUp) {
+            Some(s) => s,
+            None => return UpdateScreen::DontRedraw,
+        };
+
+    app_state.data.modify(|board| {
+        board.take_turn(clicked_row_idx, clicked_col_idx);
+        {}
+    });
+    UpdateScreen::Redraw
 }
 
 #[allow(dead_code)]
@@ -398,6 +556,6 @@ fn main() {
         Some(RRROutcome::XWins { winning_cells: _ }) => println!("X Wins!"),
         Some(RRROutcome::OWins { winning_cells: _ }) => println!("O Wins!"),
         Some(RRROutcome::Draw) => println!("It's a draw!"),
-        None => {},
+        None => {}
     }
 }

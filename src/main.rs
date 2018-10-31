@@ -1,12 +1,13 @@
 mod ricracroe;
 
-use std::io::{self, Write};
-use std::fmt;
 use std::error;
+use std::fmt;
+use std::io::{self, Write};
 
 use std::num;
 
-extern crate term_cursor;
+extern crate azul;
+use azul::prelude::*;
 
 #[derive(Debug)]
 enum RicracroeError {
@@ -17,7 +18,7 @@ enum RicracroeError {
 impl fmt::Display for RicracroeError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            RicracroeError::Io(ref err)       => write!(f, "IO error: {}", err),
+            RicracroeError::Io(ref err) => write!(f, "IO error: {}", err),
             RicracroeError::BadParse(ref err) => write!(f, "Parse error: {}", err),
         }
     }
@@ -26,14 +27,14 @@ impl fmt::Display for RicracroeError {
 impl error::Error for RicracroeError {
     fn description(&self) -> &str {
         match *self {
-            RicracroeError::Io(ref err)       => err.description(),
+            RicracroeError::Io(ref err) => err.description(),
             RicracroeError::BadParse(ref err) => err.description(),
         }
     }
 
     fn cause(&self) -> Option<&error::Error> {
         match *self {
-            RicracroeError::Io(ref err)       => Some(err),
+            RicracroeError::Io(ref err) => Some(err),
             RicracroeError::BadParse(ref err) => Some(err),
         }
     }
@@ -59,37 +60,31 @@ fn get_usize_with_prompt(prompt: &str) -> Result<usize, RicracroeError> {
     try!(io::stdout().flush());
     try!(io::stdin().read_line(&mut buffer));
     /* parse<usize> yields Result<usize, std::num::ParseIntError> */
-    buffer.trim().parse::<usize>().map_err(RicracroeError::BadParse)
+    buffer
+        .trim()
+        .parse::<usize>()
+        .map_err(RicracroeError::BadParse)
 }
 
 fn main() {
     let mut game = ricracroe::RRRGame::new_anysize(3);
 
-    loop {
-        let player = game.get_turn();
-        print!("{}", term_cursor::Clear);
-        println!("Welcome to Ric Rac Roe!");
+    let mut app = App::new(ricracroe::RRRGame::new_anysize(3), AppConfig::default());
+    /*
+    app.add_font(FontId::ExternalFont("KoHo-Light".into()), &mut FONT.clone()).expect("Failed while loading font KoHo-Light into app.");
+    */
 
-        print!("{}", term_cursor::Goto(0,4));
-        println!("{}", game.get_board());
-
-        print!("{}", term_cursor::Goto(0,15));
-        println!("It's {}'s turn.", player);
-
-        print!("{}", term_cursor::Goto(0,16));
-        let row = get_usize_with_prompt("Row:    ").unwrap();
-
-        print!("{}", term_cursor::Goto(0,17));
-        let col = get_usize_with_prompt("Column: ").unwrap();
-
-        if let Err(e) = game.take_turn(col, row) {
-            println!("{} attempted to play in {}, {}", player, col, row);
-            println!("Something went wrong: {}", e);
-        }
-
-        if let Some(winner) = game.outcome {
-            println!("{}", winner);
-            break;
-        }
+    macro_rules! CSS_PATH {
+        () => {
+            concat!(env!("CARGO_MANIFEST_DIR"), "/src/ricracroe.css")
+        };
     }
+    /*
+    let css = Css::override_native(CSS_PATH!())?;
+    */
+    let css = Css::new_from_str(include_str!(CSS_PATH!()))
+        .expect("Failed while parsing interface styling information.");
+
+    app.run(Window::new(WindowCreateOptions::default(), css).unwrap())
+        .unwrap();
 }
