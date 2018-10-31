@@ -4,15 +4,29 @@
 }
 
 .cell {
-    border-right: 1px solid #8d8d8d;
-    border-bottom: 1px solid #8d8d8d;
+    border-right: 1px solid #888;
+    border-bottom: 1px solid #888;
+    font-color: black;
+    background-color: #ddd;
+}
+
+.cell-x {
+    border-right: 1px solid #888;
+    border-bottom: 1px solid #888;
     font-color: white;
-    background-color: #333;
+    background-color: #40B;
+}
+
+.cell-o {
+    border-right: 1px solid #888;
+    border-bottom: 1px solid #888;
+    font-color: white;
+    background-color: #B04;
 }
 
 .game-state {
     height: 2em;
-    background-color: grey;
+    background-color: #FFF;
 }
 
 * {

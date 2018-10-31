@@ -418,6 +418,21 @@ impl RRRGame {
     }
 }
 
+fn new_cell_node<T: Layout>(board: &RRRBoard, x: usize, y: usize) -> Dom<T> {
+    let cell_val = board.fetch(x, y).expect("Error updating board state");
+    let style = match cell_val {
+        RRRCell::Clear => "cell",
+        RRRCell::X     => "cell-x",
+        RRRCell::O     => "cell-o",
+    };
+    Dom::new(NodeType::Label(format!(
+        "{}",
+        cell_val
+        ))).with_class(style)
+        .with_hit_test(On::MouseUp)
+}
+
+
 impl Layout for RRRGame {
     fn layout(&self, _info: WindowInfo<Self>) -> Dom<Self> {
         let outcome = self.outcome.clone();
@@ -427,89 +442,23 @@ impl Layout for RRRGame {
                 Dom::new(NodeType::Div)
                     .with_class("row")
                     .with_hit_test(On::MouseUp)
-                    .with_child(
-                        Dom::new(NodeType::Label(format!(
-                            "{}",
-                            self.get_board()
-                                .fetch(0, 0)
-                                .expect("Error updating board state")
-                        ))).with_class("cell")
-                        .with_hit_test(On::MouseUp),
-                    ).with_child(
-                        Dom::new(NodeType::Label(format!(
-                            "{}",
-                            self.get_board()
-                                .fetch(1, 0)
-                                .expect("Error updating board state")
-                        ))).with_class("cell")
-                        .with_hit_test(On::MouseUp),
-                    ).with_child(
-                        Dom::new(NodeType::Label(format!(
-                            "{}",
-                            self.get_board()
-                                .fetch(2, 0)
-                                .expect("Error updating board state")
-                        ))).with_class("cell")
-                        .with_hit_test(On::MouseUp),
-                    ),
+                    .with_child(new_cell_node(self.get_board(), 0, 0))
+                    .with_child(new_cell_node(self.get_board(), 1, 0))
+                    .with_child(new_cell_node(self.get_board(), 2, 0))
             ).with_child(
                 Dom::new(NodeType::Div)
                     .with_class("row")
                     .with_hit_test(On::MouseUp)
-                    .with_child(
-                        Dom::new(NodeType::Label(format!(
-                            "{}",
-                            self.get_board()
-                                .fetch(0, 1)
-                                .expect("Error updating board state")
-                        ))).with_class("cell")
-                        .with_hit_test(On::MouseUp),
-                    ).with_child(
-                        Dom::new(NodeType::Label(format!(
-                            "{}",
-                            self.get_board()
-                                .fetch(1, 1)
-                                .expect("Error updating board state")
-                        ))).with_class("cell")
-                        .with_hit_test(On::MouseUp),
-                    ).with_child(
-                        Dom::new(NodeType::Label(format!(
-                            "{}",
-                            self.get_board()
-                                .fetch(2, 1)
-                                .expect("Error updating board state")
-                        ))).with_class("cell")
-                        .with_hit_test(On::MouseUp),
-                    ),
+                    .with_child(new_cell_node(self.get_board(), 0, 1))
+                    .with_child(new_cell_node(self.get_board(), 1, 1))
+                    .with_child(new_cell_node(self.get_board(), 2, 1))
             ).with_child(
                 Dom::new(NodeType::Div)
                     .with_class("row")
                     .with_hit_test(On::MouseUp)
-                    .with_child(
-                        Dom::new(NodeType::Label(format!(
-                            "{}",
-                            self.get_board()
-                                .fetch(0, 2)
-                                .expect("Error updating board state")
-                        ))).with_class("cell")
-                        .with_hit_test(On::MouseUp),
-                    ).with_child(
-                        Dom::new(NodeType::Label(format!(
-                            "{}",
-                            self.get_board()
-                                .fetch(1, 2)
-                                .expect("Error updating board state")
-                        ))).with_class("cell")
-                        .with_hit_test(On::MouseUp),
-                    ).with_child(
-                        Dom::new(NodeType::Label(format!(
-                            "{}",
-                            self.get_board()
-                                .fetch(2, 2)
-                                .expect("Error updating board state")
-                        ))).with_class("cell")
-                        .with_hit_test(On::MouseUp),
-                    ),
+                    .with_child(new_cell_node(self.get_board(), 0, 2))
+                    .with_child(new_cell_node(self.get_board(), 1, 2))
+                    .with_child(new_cell_node(self.get_board(), 2, 2))
             ).with_callback(On::MouseUp, Callback(handle_mouseclick_board))
             .with_child(
                 Dom::new(NodeType::Div)
