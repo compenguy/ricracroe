@@ -54,21 +54,18 @@ impl From<num::ParseIntError> for RicracroeError {
 
 fn main() {
     let app = App::new(ricracroe::RRRGame::new_anysize(3), AppConfig::default());
-    /*
-    app.add_font(FontId::ExternalFont("KoHo-Light".into()), &mut FONT.clone()).expect("Failed while loading font KoHo-Light into app.");
-    */
 
     macro_rules! CSS_PATH {
         () => {
             concat!(env!("CARGO_MANIFEST_DIR"), "/src/ricracroe.css")
         };
     }
-    /*
-    let css = Css::override_native(CSS_PATH!())?;
-    */
     let css = Css::new_from_str(include_str!(CSS_PATH!()))
         .expect("Failed while parsing interface styling information.");
 
-    app.run(Window::new(WindowCreateOptions::default(), css).unwrap())
-        .unwrap();
+    let mut options = WindowCreateOptions::default();
+    options.state.title = "ricracroe".to_owned();
+    options.state.size.dimensions = LogicalSize::new(400.0 as f64, 400.0 as f64);
+    options.state.size.min_dimensions = Some(LogicalSize::new(150.0 as f64, 150.0 as f64));
+    app.run(Window::new(options, css).unwrap()).unwrap();
 }
