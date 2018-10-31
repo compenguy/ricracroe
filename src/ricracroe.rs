@@ -422,16 +422,13 @@ fn new_cell_node<T: Layout>(board: &RRRBoard, x: usize, y: usize) -> Dom<T> {
     let cell_val = board.fetch(x, y).expect("Error updating board state");
     let style = match cell_val {
         RRRCell::Clear => "cell",
-        RRRCell::X     => "cell-x",
-        RRRCell::O     => "cell-o",
+        RRRCell::X => "cell-x",
+        RRRCell::O => "cell-o",
     };
-    Dom::new(NodeType::Label(format!(
-        "{}",
-        cell_val
-        ))).with_class(style)
+    Dom::new(NodeType::Label(format!("{}", cell_val)))
+        .with_class(style)
         .with_hit_test(On::MouseUp)
 }
-
 
 impl Layout for RRRGame {
     fn layout(&self, _info: WindowInfo<Self>) -> Dom<Self> {
@@ -444,30 +441,31 @@ impl Layout for RRRGame {
                     .with_hit_test(On::MouseUp)
                     .with_child(new_cell_node(self.get_board(), 0, 0))
                     .with_child(new_cell_node(self.get_board(), 1, 0))
-                    .with_child(new_cell_node(self.get_board(), 2, 0))
+                    .with_child(new_cell_node(self.get_board(), 2, 0)),
             ).with_child(
                 Dom::new(NodeType::Div)
                     .with_class("row")
                     .with_hit_test(On::MouseUp)
                     .with_child(new_cell_node(self.get_board(), 0, 1))
                     .with_child(new_cell_node(self.get_board(), 1, 1))
-                    .with_child(new_cell_node(self.get_board(), 2, 1))
+                    .with_child(new_cell_node(self.get_board(), 2, 1)),
             ).with_child(
                 Dom::new(NodeType::Div)
                     .with_class("row")
                     .with_hit_test(On::MouseUp)
                     .with_child(new_cell_node(self.get_board(), 0, 2))
                     .with_child(new_cell_node(self.get_board(), 1, 2))
-                    .with_child(new_cell_node(self.get_board(), 2, 2))
+                    .with_child(new_cell_node(self.get_board(), 2, 2)),
             ).with_callback(On::MouseUp, Callback(handle_mouseclick_board))
             .with_child(
                 Dom::new(NodeType::Div)
                     .with_class("game-state")
-                    .with_child(
-                        Dom::new(NodeType::Label(
-                            format!("{}", outcome.map(|o| format!("{}", o)).unwrap_or_else(|| format!("{}'s turn.", turn)))
-                        ))
-                    )
+                    .with_child(Dom::new(NodeType::Label(format!(
+                        "{}",
+                        outcome
+                            .map(|o| format!("{}", o))
+                            .unwrap_or_else(|| format!("{}'s turn.", turn))
+                    )))),
             )
     }
 }
@@ -490,14 +488,16 @@ fn handle_mouseclick_board(
             None => return UpdateScreen::DontRedraw,
         };
 
-    let (clicked_col_idx, col_that_was_clicked) =
+    let (clicked_col_idx, _col_that_was_clicked) =
         match event.get_first_hit_child(row_that_was_clicked, On::MouseUp) {
             Some(s) => s,
             None => return UpdateScreen::DontRedraw,
         };
 
     app_state.data.modify(|board| {
-        board.take_turn(clicked_col_idx, clicked_row_idx);
+        board
+            .take_turn(clicked_col_idx, clicked_row_idx)
+            .expect("Game logic error.");
         ()
     });
 

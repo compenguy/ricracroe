@@ -2,7 +2,7 @@ mod ricracroe;
 
 use std::error;
 use std::fmt;
-use std::io::{self, Write};
+use std::io;
 
 use std::num;
 
@@ -52,24 +52,8 @@ impl From<num::ParseIntError> for RicracroeError {
     }
 }
 
-/* TODO: templatize? closure for input validation? */
-fn get_usize_with_prompt(prompt: &str) -> Result<usize, RicracroeError> {
-    let mut buffer = String::new();
-    /* TODO: repeat prompt/parse until valid input? */
-    print!("{}", prompt);
-    try!(io::stdout().flush());
-    try!(io::stdin().read_line(&mut buffer));
-    /* parse<usize> yields Result<usize, std::num::ParseIntError> */
-    buffer
-        .trim()
-        .parse::<usize>()
-        .map_err(RicracroeError::BadParse)
-}
-
 fn main() {
-    let mut game = ricracroe::RRRGame::new_anysize(3);
-
-    let mut app = App::new(ricracroe::RRRGame::new_anysize(3), AppConfig::default());
+    let app = App::new(ricracroe::RRRGame::new_anysize(3), AppConfig::default());
     /*
     app.add_font(FontId::ExternalFont("KoHo-Light".into()), &mut FONT.clone()).expect("Failed while loading font KoHo-Light into app.");
     */

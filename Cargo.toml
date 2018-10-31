@@ -4,7 +4,9 @@ version = "0.1.0"
 authors = ["Will Page <compenguy@gmail.com>"]
 
 [dependencies]
-azul = { git = "https://github.com/maps4print/azul" }
 #tinyfiledialogs specifies an old, conflicting libc version - override it
 libc = "0.2.36"
 
+[dependencies.azul]
+git = "https://github.com/maps4print/azul"
+default-features = false
