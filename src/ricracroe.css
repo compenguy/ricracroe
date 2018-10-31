@@ -1,27 +1,26 @@
 .row {
     flex-direction: row;
-    border-bottom: 1px solid #8d8d8d;
 }
 
 .cell {
-    border-right: 1px solid #888;
-    border-bottom: 1px solid #888;
-    font-color: black;
     background-color: #ddd;
+    font-color: black;
+    border-right: 1px solid #888;
+    border-bottom: 1px solid #666;
 }
 
 .cell-x {
-    border-right: 1px solid #888;
-    border-bottom: 1px solid #888;
-    font-color: white;
     background-color: #40B;
+    font-color: white;
+    border-right: 1px solid #DDD;
+    border-bottom: 1px solid #AAA;
 }
 
 .cell-o {
-    border-right: 1px solid #888;
-    border-bottom: 1px solid #888;
+    background-color: #E64;
     font-color: white;
-    background-color: #B04;
+    border-right: 1px solid #DDD;
+    border-bottom: 1px solid #AAA;
 }
 
 .game-state {
