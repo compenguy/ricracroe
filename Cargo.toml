@@ -2,8 +2,11 @@
 name = "ricracroe"
 version = "0.1.0"
 authors = ["Will Page <compenguy@gmail.com>"]
+edition = "2018"
 
 [dependencies]
-term_cursor = "0.1.1"
-#termcolor = "0.3.2"
-#term_size = "0.3.0"
+log = { version = "0.4", default-features = true, features = ["std"] }
+flexi_logger = "0.13"
+tempdir = "0.3"
+clap = "2.33"
+crossterm = "0.13"
