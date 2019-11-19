@@ -2,7 +2,7 @@ use log::debug;
 
 use crate::coord::Coord;
 use crate::errors::Result;
-use crate::ricracroe::RRRGame;
+use crate::ricracroe::{RRRGame, RRROutcome};
 
 mod settings;
 use settings::RenderSettings;
@@ -15,20 +15,29 @@ pub enum GameAction {
     Quit,
 }
 
+const INSTRUCTIONS: &str = r#"Press 'Q', 'q', or <Esc> to quit.
+To make a move:
+1. Mouse click in square, or
+2. Arrows to move and <Space> or <Enter> to select."#;
+
 pub fn play_game() -> Result<()> {
     let board_size: usize = 3;
     let mut game = RRRGame::new_anysize(board_size);
 
-    let mut term = CxTerm::new(RenderSettings::new(board_size, 4), std::io::stdout())?;
+    let mut term = CxTerm::new(RenderSettings::new(2, 4, board_size), std::io::stdout())?;
     debug!("Resetting display");
     term.reset_display()?;
 
     debug!("Starting game...");
 
+    // We want this to be written once, and not refreshed with each loop
+    term.write_msglog(INSTRUCTIONS)?;
+
     loop {
         let player = game.get_turn();
         debug!("Player turn: {}", player);
 
+        // Redraw board state
         term.write_title("Welcome to Ric Rac Roe!")?;
 
         for board_row in 0..board_size {
@@ -52,21 +61,34 @@ pub fn play_game() -> Result<()> {
         }
         term.write_rendered_board_row(board_size * 2, &game.board.render_board_bottom())?;
 
-        term.write_status(&format!("It's {}'s turn.", player))?;
-        term.commit()?;
-
-        match term.get_game_action()? {
-            GameAction::TakeTurn(coord) => {
-                if let Err(e) = game.take_turn(&coord) {
-                    term.write_status(&format!("{} cannot play in {} ({})", player, coord, e))?;
-                }
+        if let Some(outcome) = game.outcome {
+            // Display game end condition
+            match outcome {
+                RRROutcome::Draw => term.write_status("It's a draw!")?,
+                RRROutcome::XWins { .. } => term.write_status("X won!")?,
+                RRROutcome::OWins { .. } => term.write_status("O won!")?,
             }
-            GameAction::Quit => return Ok(()),
-        }
-
-        if let Some(winner) = game.outcome {
-            term.write_status(&format!("{} won!", winner))?;
+            term.write_msglog("Press any key to exit.")?;
+            term.commit()?;
+            term.get_input_event()?;
             return Ok(());
+        } else {
+            // Display game turn state
+            term.write_status(&format!("It's {}'s turn.", player))?;
+            term.commit()?;
+
+            match term.get_game_action()? {
+                GameAction::TakeTurn(coord) => {
+                    if let Err(e) = game.take_turn(&coord) {
+                        term.write_msglog(&format!("{} cannot play in {} ({})", player, coord, e))?;
+                        term.commit()?;
+                    } else {
+                        term.clear_msglog()?;
+                        term.commit()?;
+                    }
+                }
+                GameAction::Quit => return Ok(()),
+            }
         }
     }
 }

@@ -8,6 +8,8 @@ use crate::errors::{Error, Result};
 use crate::terminal::settings::RenderSettings;
 use crate::terminal::GameAction;
 
+const MAX_MSGLOG_LINES: usize = 4;
+
 pub struct CxTerm<W: Write> {
     _raw: screen::RawScreen,
     input: input::TerminalInput,
@@ -55,47 +57,59 @@ impl<W: Write> CxTerm<W> {
         Ok(())
     }
 
-    pub fn draw_line(
-        &mut self,
-        coord: &Coord,
-        text: &str,
-        clear: terminal::ClearType,
-    ) -> Result<()> {
+    pub fn draw_line(&mut self, coord: &Coord, text: &str) -> Result<()> {
+        self.clear_line(coord)?;
         self.writer
             .queue(cursor::MoveTo(coord.x as u16, coord.y as u16))
             .map_err(Error::from)?
-            .queue(terminal::Clear(clear))
-            .map_err(Error::from)?
             .queue(Output(text.to_string()))
-            .map_err(Error::from)
+            .map_err(Error::from)?;
+        Ok(())
+    }
+
+    pub fn clear_line(&mut self, coord: &Coord) -> Result<()> {
+        self.writer
+            .queue(cursor::MoveTo(coord.x as u16, coord.y as u16))
+            .map_err(Error::from)?
+            .queue(terminal::Clear(terminal::ClearType::CurrentLine))
             .map_err(Error::from)?;
         Ok(())
     }
 
     pub fn write_title(&mut self, title: &str) -> Result<()> {
-        self.draw_line(
-            &self.settings.get_title_origin(),
-            title,
-            terminal::ClearType::CurrentLine,
-        )
+        self.draw_line(&self.settings.get_title_origin(), title)
     }
 
     pub fn write_status(&mut self, status: &str) -> Result<()> {
-        self.draw_line(
-            &self.settings.get_status_origin(),
-            status,
-            terminal::ClearType::CurrentLine,
-        )
+        self.draw_line(&self.settings.get_status_origin(), status)
+    }
+
+    pub fn clear_msglog(&mut self) -> Result<()> {
+        // Clear *all* msglog lines
+        for num in 0..MAX_MSGLOG_LINES {
+            let coord = self.settings.get_msglog_origin() + Coord { x: 0, y: num };
+            self.clear_line(&coord)?;
+        }
+        Ok(())
+    }
+
+    pub fn write_msglog(&mut self, status: &str) -> Result<()> {
+        self.clear_msglog()?;
+        // Write *up to* max number of msglog lines
+        for (num, line) in status.lines().enumerate() {
+            if num >= MAX_MSGLOG_LINES {
+                break;
+            }
+            let coord = self.settings.get_msglog_origin() + Coord { x: 0, y: num };
+            self.draw_line(&coord, line)?;
+        }
+        Ok(())
     }
 
     pub fn write_rendered_board_row(&mut self, row: usize, line_draw: &str) -> Result<()> {
         let mut board_row_origin = self.settings.get_board_origin();
         board_row_origin.y += row;
-        self.draw_line(
-            &board_row_origin,
-            line_draw,
-            terminal::ClearType::CurrentLine,
-        )
+        self.draw_line(&board_row_origin, line_draw)
     }
 
     pub fn blink_cursor(&mut self, coord: &Coord) -> Result<()> {

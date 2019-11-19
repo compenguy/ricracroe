@@ -4,6 +4,8 @@ use std::error;
 use std::fmt;
 use std::vec::Vec;
 
+use log::error;
+
 use crate::coord::Coord;
 
 #[derive(Debug)]
@@ -382,14 +384,14 @@ impl RRRGame {
                 Ok(self.player)
             }
             Err(e) => {
-                println!(
+                error!(
                     "{} attempted to play in {},{}:\n{}",
                     self.player,
                     coord.x + 1,
                     coord.y + 1,
                     self.board
                 );
-                println!("Something went wrong: {}", e);
+                error!("Something went wrong: {}", e);
                 Err(e)
             }
         }

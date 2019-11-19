@@ -1,13 +1,15 @@
 use crate::coord::Coord;
 
 pub struct RenderSettings {
+    game_padding: usize,
     board_size: usize,
     board_padding: usize,
 }
 
 impl RenderSettings {
-    pub fn new(board_size: usize, board_padding: usize) -> Self {
+    pub fn new(game_padding: usize, board_padding: usize, board_size: usize) -> Self {
         RenderSettings {
+            game_padding,
             board_size,
             board_padding,
         }
@@ -20,15 +22,15 @@ impl RenderSettings {
     pub fn term_coord_to_cell_coord(&self, term_coord: &Coord) -> Coord {
         let term_rel_coord: Coord = *term_coord - self.get_board_origin();
         Coord {
-            x: (term_rel_coord.x - 1) / 2,
-            y: (term_rel_coord.y - 1) / 2,
+            x: term_rel_coord.x.saturating_sub(1) / 2,
+            y: term_rel_coord.y.saturating_sub(1) / 2,
         }
     }
 
     pub fn cell_coord_to_term_coord(&self, cell_coord: &Coord) -> Coord {
         let term_rel_coord = Coord {
-            x: (2 * cell_coord.x) + 1,
-            y: (2 * cell_coord.y) + 1,
+            x: cell_coord.x.saturating_mul(2).saturating_add(1),
+            y: cell_coord.y.saturating_mul(2).saturating_add(1),
         };
         self.get_board_origin() + term_rel_coord
     }
@@ -38,7 +40,10 @@ impl RenderSettings {
     }
 
     pub fn get_title_origin(&self) -> Coord {
-        Coord { x: 0, y: 0 }
+        Coord {
+            x: self.game_padding,
+            y: self.game_padding,
+        }
     }
 
     pub fn get_board_origin(&self) -> Coord {
@@ -51,8 +56,12 @@ impl RenderSettings {
 
     pub fn get_status_origin(&self) -> Coord {
         Coord {
-            x: 0,
+            x: self.game_padding,
             y: self.get_board_origin().y + self.get_rendered_board_height() + self.board_padding,
         }
+    }
+
+    pub fn get_msglog_origin(&self) -> Coord {
+        self.get_status_origin() + Coord { x: 0, y: 3 }
     }
 }
